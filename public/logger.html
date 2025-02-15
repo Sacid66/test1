@@ -11,7 +11,6 @@
 </head>
 <body>
     <h1>Ziyaretçi Logları</h1>
-    <a href="index.html">Ana Sayfaya Dön</a>
     <table>
         <thead>
             <tr>
@@ -20,6 +19,7 @@
                 <th>Platform</th>
                 <th>Ekran Boyutu</th>
                 <th>Dil</th>
+                <th>Konum</th>
             </tr>
         </thead>
         <tbody id="logTable"></tbody>
@@ -40,6 +40,7 @@
                         <td>${log.platform}</td>
                         <td>${log.screenWidth}x${log.screenHeight}</td>
                         <td>${log.language}</td>
+                        <td>${log.location || "Bilinmeyen"}</td>
                     </tr>`;
                     table.innerHTML += row;
                 });
