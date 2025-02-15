@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kullanıcı Takip</title>
+    <title></title>
     <style>
         body {
             display: flex;
@@ -18,7 +18,7 @@
     </style>
 </head>
 <body>
-    SELAM
+    ölüm
 
     <script>
         async function getUserIP() {
@@ -45,7 +45,7 @@
 
             console.log("Gönderilecek veri:", userData);
 
-            fetch('/api/log', { // Sunucuya veri gönderme
+            fetch('/api/log', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
@@ -55,7 +55,7 @@
             .catch(error => console.error("Veri gönderilirken hata oluştu:", error));
         }
 
-        sendData(); // Sayfa açılınca çalıştır
+        sendData(); 
     </script>
 </body>
 </html>
