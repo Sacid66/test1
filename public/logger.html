@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziyaretçi Logları</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Ziyaretçi Logları</h1>
+    <a href="index.html">Ana Sayfaya Dön</a>
+    <table>
+        <thead>
+            <tr>
+                <th>IP</th>
+                <th>Tarayıcı</th>
+                <th>Platform</th>
+                <th>Ekran Boyutu</th>
+                <th>Dil</th>
+            </tr>
+        </thead>
+        <tbody id="logTable"></tbody>
+    </table>
+
+    <script>
+        async function fetchLogs() {
+            try {
+                const res = await fetch('/api/getLogs'); // Doğru URL
+                const logs = await res.json();
+                const table = document.getElementById('logTable');
+                table.innerHTML = '';
+
+                logs.forEach(log => {
+                    const row = `<tr>
+                        <td>${log.ip}</td>
+                        <td>${log.userAgent}</td>
+                        <td>${log.platform}</td>
+                        <td>${log.screenWidth}x${log.screenHeight}</td>
+                        <td>${log.language}</td>
+                    </tr>`;
+                    table.innerHTML += row;
+                });
+
+                console.log("Gelen veriler:", logs);
+            } catch (error) {
+                console.error("Veri çekme hatası:", error);
+            }
+        }
+
+        fetchLogs(); // Sayfa açıldığında verileri getir
+        setInterval(fetchLogs, 5000); // 5 saniyede bir güncelle
+    </script>
+</body>
+</html>

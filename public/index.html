@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Takip</title>
+</head>
+<body>
+    <h1>Hoş Geldiniz</h1>
+    <p>Bu site test amaçlıdır. Bilgiler sunucuya kaydedilecektir.</p>
+    <a href="logger.html">Ziyaretçi Loglarını Gör</a>
+
+    <script>
+        async function getUserIP() {
+            try {
+                const res = await fetch('https://api64.ipify.org?format=json'); 
+                const data = await res.json();
+                return data.ip;
+            } catch (error) {
+                console.error("IP alınırken hata oluştu:", error);
+                return "Bilinmeyen";
+            }
+        }
+
+        async function sendData() {
+            const ip = await getUserIP();
+            const userData = {
+                ip: ip,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                language: navigator.language
+            };
+
+            console.log("Gönderilecek veri:", userData);
+
+            fetch('/api/log', { // Sunucuya veri gönderme
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => console.log("Sunucudan gelen cevap:", data))
+            .catch(error => console.error("Veri gönderilirken hata oluştu:", error));
+        }
+
+        sendData(); // Sayfa açılınca çalıştır
+    </script>
+</body>
+</html>
