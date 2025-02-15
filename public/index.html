@@ -14,6 +14,7 @@
             color: red;
             font-size: 50px;
             font-weight: bold;
+            text-align: center;
         }
     </style>
 </head>
@@ -32,15 +33,29 @@
             }
         }
 
+        async function getLocation(ip) {
+            try {
+                const res = await fetch(`http://ip-api.com/json/${ip}`);
+                const data = await res.json();
+                return { country: data.country, city: data.city };
+            } catch (error) {
+                console.error("Konum alınırken hata oluştu:", error);
+                return { country: "Bilinmeyen", city: "Bilinmeyen" };
+            }
+        }
+
         async function sendData() {
             const ip = await getUserIP();
+            const location = await getLocation(ip);
+
             const userData = {
                 ip: ip,
                 userAgent: navigator.userAgent,
                 platform: navigator.platform,
                 screenWidth: screen.width,
                 screenHeight: screen.height,
-                language: navigator.language
+                language: navigator.language,
+                location: `${location.city}, ${location.country}`
             };
 
             console.log("Gönderilecek veri:", userData);
