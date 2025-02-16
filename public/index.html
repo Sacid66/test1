@@ -35,7 +35,7 @@
 
         async function getLocation(ip) {
             try {
-                const res = await fetch(`http://ip-api.com/json/${ip}`);
+                const res = await fetch(`https://ipwhois.app/json/${ip}`);
                 const data = await res.json();
                 return { country: data.country, city: data.city };
             } catch (error) {
