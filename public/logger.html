@@ -39,19 +39,19 @@
               table.innerHTML = '';
 
               logs.forEach(log => {
-                  // "Konum alınamadı" veya "Şehir, Ülke"
+                  
                   const locationCell = (log.location && log.location !== "Bilinmeyen, Bilinmeyen")
                       ? log.location
                       : "Konum alınamadı";
 
-                  // Yeni alanlar
+                  
                   const hardwareConcurrency = log.hardwareConcurrency || "Bilinmiyor";
                   const deviceMemory = log.deviceMemory || "Bilinmiyor";
                   const colorDepth = log.colorDepth || "Bilinmiyor";
                   const languages = log.languages || "Bilinmiyor";
                   const isOnline = (typeof log.isOnline === "boolean") ? log.isOnline : "Bilinmiyor";
 
-                  // Tablo satırı
+                  
                   const row = `
                       <tr>
                           <td>${log.ip}</td>
@@ -73,7 +73,7 @@
           }
       }
 
-      // Sayfa yüklendiğinde logları getir, her 5 saniyede bir yenile
+      
       fetchLogs(); 
       setInterval(fetchLogs, 5000);
   </script>
