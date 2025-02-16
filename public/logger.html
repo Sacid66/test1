@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gel</title>
+    <title>Ziyaretçi Logları</title>
     <style>
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        #map { height: 500px; width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h1>öl</h1>
+    <h1>yok ol</h1>
     <table>
         <thead>
             <tr>
@@ -24,6 +25,9 @@
         </thead>
         <tbody id="logTable"></tbody>
     </table>
+
+    <h2>Harita Üzerinde Konumlar</h2>
+    <div id="map"></div>
 
     <script>
         async function fetchLogs() {
@@ -45,14 +49,31 @@
                     table.innerHTML += row;
                 });
 
-                console.log("Gelen veriler:", logs);
+                loadMap(logs);
             } catch (error) {
                 console.error("Veri çekme hatası:", error);
             }
         }
 
+        function loadMap(logs) {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 4,
+                center: { lat: 39.9334, lng: 32.8597 }
+            });
+
+            logs.forEach(log => {
+                if (log.latitude && log.longitude) {
+                    new google.maps.Marker({
+                        position: { lat: log.latitude, lng: log.longitude },
+                        map: map
+                    });
+                }
+            });
+        }
+
         fetchLogs(); 
-        setInterval(fetchLogs, 5000); 
+        setInterval(fetchLogs, 5000);
     </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=KENDİ_API_KEYİN&callback=loadMap" async defer></script>
 </body>
 </html>
