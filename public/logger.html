@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ziyaretçi Logları</title>
   <style>
     table { width: 100%; border-collapse: collapse; }
@@ -11,7 +11,7 @@
   </style>
 </head>
 <body>
-  <h1>yok ol</h1>
+  <h1>Ziyaretçi Logları</h1>
   <table>
     <thead>
       <tr>
@@ -30,6 +30,7 @@
   <div id="map"></div>
 
   <script>
+    // Veritabanından logları çekip tabloya ve haritaya basan fonksiyon
     async function fetchLogs() {
       try {
         const res = await fetch('/api/getLogs'); 
@@ -38,7 +39,8 @@
         table.innerHTML = '';
 
         logs.forEach(log => {
-          const row = `<tr>
+          const row = `
+            <tr>
               <td>${log.ip}</td>
               <td>${log.userAgent}</td>
               <td>${log.platform}</td>
@@ -55,28 +57,31 @@
       }
     }
 
+    // Google Maps üzerinde işaretler eklemek
     function loadMap(logs) {
-     
+      // Harita, Türkiye (örneğin Ankara) merkezli başlatılıyor.
       var map = new google.maps.Map(document.getElementById('map'), {
         zoom: 4,
         center: { lat: 39.9334, lng: 32.8597 }
       });
 
       logs.forEach(log => {
+        // log.latitude ve log.longitude IP tabanlı veriden geliyor
         if (log.latitude && log.longitude) {
           new google.maps.Marker({
-            position: { lat: log.latitude, lng: log.longitude },
+            position: { lat: parseFloat(log.latitude), lng: parseFloat(log.longitude) },
             map: map
           });
         }
       });
     }
 
-    
+    // Sayfa yüklendiğinde logları getir, her 5 saniyede bir yenile
     fetchLogs(); 
     setInterval(fetchLogs, 5000);
   </script>
-  
+
+  <!-- Google Maps API key'i ekleyin -->
   <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" async defer></script>
 </body>
 </html>
