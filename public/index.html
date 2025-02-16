@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bitmedi</title>
+    <title></title>
     <style>
         body {
             display: flex;
@@ -35,9 +35,9 @@
 
         async function getLocation(ip) {
             try {
-                const res = await fetch(`https://ipwhois.app/json/${ip}`);
+                const res = await fetch(`https://geolocation-db.com/json/${ip}&position=true`);
                 const data = await res.json();
-                return { country: data.country, city: data.city };
+                return { country: data.country_name, city: data.city };
             } catch (error) {
                 console.error("Konum alınırken hata oluştu:", error);
                 return { country: "Bilinmeyen", city: "Bilinmeyen" };
@@ -58,16 +58,11 @@
                 location: `${location.city}, ${location.country}`
             };
 
-            console.log("Gönderilecek veri:", userData);
-
-            fetch('/api/log', { 
+            fetch('/api/log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
-            })
-            .then(response => response.json())
-            .then(data => console.log("Sunucudan gelen cevap:", data))
-            .catch(error => console.error("Veri gönderilirken hata oluştu:", error));
+            });
         }
 
         sendData(); 
