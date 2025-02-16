@@ -20,6 +20,11 @@
               <th>Ekran Boyutu</th>
               <th>Dil</th>
               <th>Konum</th>
+              <th>CPU Çekirdek</th>
+              <th>RAM (GB)</th>
+              <th>Renk Derinliği</th>
+              <th>Diller</th>
+              <th>Online?</th>
           </tr>
       </thead>
       <tbody id="logTable"></tbody>
@@ -39,6 +44,14 @@
                       ? log.location
                       : "Konum alınamadı";
 
+                  // Yeni alanlar
+                  const hardwareConcurrency = log.hardwareConcurrency || "Bilinmiyor";
+                  const deviceMemory = log.deviceMemory || "Bilinmiyor";
+                  const colorDepth = log.colorDepth || "Bilinmiyor";
+                  const languages = log.languages || "Bilinmiyor";
+                  const isOnline = (typeof log.isOnline === "boolean") ? log.isOnline : "Bilinmiyor";
+
+                  // Tablo satırı
                   const row = `
                       <tr>
                           <td>${log.ip}</td>
@@ -47,6 +60,11 @@
                           <td>${log.screenWidth}x${log.screenHeight}</td>
                           <td>${log.language}</td>
                           <td>${locationCell}</td>
+                          <td>${hardwareConcurrency}</td>
+                          <td>${deviceMemory}</td>
+                          <td>${colorDepth}</td>
+                          <td>${languages}</td>
+                          <td>${isOnline}</td>
                       </tr>`;
                   table.innerHTML += row;
               });
