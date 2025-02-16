@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>yok ol</title>
+    <title>gel</title>
     <style>
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; }
@@ -40,7 +40,7 @@
                         <td>${log.platform}</td>
                         <td>${log.screenWidth}x${log.screenHeight}</td>
                         <td>${log.language}</td>
-                        <td>${log.location || "Bilinmeyen"}</td>
+                        <td>${log.location && log.location !== "Bilinmeyen, Bilinmeyen" ? log.location : "Konum alınamadı"}</td>
                     </tr>`;
                     table.innerHTML += row;
                 });
@@ -52,7 +52,7 @@
         }
 
         fetchLogs(); 
-        setInterval(fetchLogs, 5000); 
+        setInterval(fetchLogs, 5000);
     </script>
 </body>
 </html>
