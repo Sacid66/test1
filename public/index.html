@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>‎ </title>
+  <title>‎</title>
   <style>
     body {
       display: flex;
@@ -26,17 +26,6 @@
     async function getIPLocation() {
       try {
         // ipwho.is -> JSON yanıt döndürür
-        // Örnek istek: https://ipwho.is/
-        // Örnek cevap (başarılı ise success: true)
-        // {
-        //   "ip": "8.8.8.8",
-        //   "success": true,
-        //   "city": "Mountain View",
-        //   "country": "United States",
-        //   "latitude": 37.4056,
-        //   "longitude": -122.0775,
-        //   ...
-        // }
         const res = await fetch('https://ipwho.is/');
         const data = await res.json();
         if (data.success) {
