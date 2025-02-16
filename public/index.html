@@ -33,29 +33,53 @@
             }
         }
 
-        async function getLocation(ip) {
+        async function getLocationFromCoords(latitude, longitude) {
             try {
-                const res = await fetch(`https://geolocation-db.com/json/${ip}&position=true`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                 const data = await res.json();
-                return { country: data.country_name, city: data.city };
+                return { country: data.address.country, city: data.address.city || data.address.town || data.address.village || "Bilinmeyen" };
             } catch (error) {
-                console.error("Konum alınırken hata oluştu:", error);
+                console.error("GPS konum alınırken hata oluştu:", error);
                 return { country: "Bilinmeyen", city: "Bilinmeyen" };
             }
         }
 
+        function getGPSLocation() {
+            return new Promise((resolve, reject) => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+                            const location = await getLocationFromCoords(latitude, longitude);
+                            resolve({ latitude, longitude, location });
+                        },
+                        (error) => {
+                            console.error("Konum izni reddedildi veya hata oluştu:", error);
+                            resolve(null);
+                        }
+                    );
+                } else {
+                    console.error("Tarayıcı konum API'sini desteklemiyor.");
+                    resolve(null);
+                }
+            });
+        }
+
         async function sendData() {
             const ip = await getUserIP();
-            const location = await getLocation(ip);
+            let locationData = await getGPSLocation();
 
-            const userData = {
+            let userData = {
                 ip: ip,
                 userAgent: navigator.userAgent,
                 platform: navigator.platform,
                 screenWidth: screen.width,
                 screenHeight: screen.height,
                 language: navigator.language,
-                location: `${location.city}, ${location.country}`
+                location: locationData ? `${locationData.location.city}, ${locationData.location.country}` : "Konum alınamadı",
+                latitude: locationData ? locationData.latitude : null,
+                longitude: locationData ? locationData.longitude : null
             };
 
             fetch('/api/log', {
