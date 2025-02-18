@@ -39,19 +39,16 @@
               table.innerHTML = '';
 
               logs.forEach(log => {
-                  
                   const locationCell = (log.location && log.location !== "Bilinmeyen, Bilinmeyen")
                       ? log.location
                       : "Konum alınamadı";
 
-                  
                   const hardwareConcurrency = log.hardwareConcurrency || "Bilinmiyor";
                   const deviceMemory = log.deviceMemory || "Bilinmiyor";
                   const colorDepth = log.colorDepth || "Bilinmiyor";
                   const languages = log.languages || "Bilinmiyor";
                   const isOnline = (typeof log.isOnline === "boolean") ? log.isOnline : "Bilinmiyor";
 
-                  
                   const row = `
                       <tr>
                           <td>${log.ip}</td>
@@ -73,7 +70,6 @@
           }
       }
 
-      
       fetchLogs(); 
       setInterval(fetchLogs, 5000);
   </script>
