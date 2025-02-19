@@ -22,7 +22,7 @@
   GEL.
 
   <script>
-    // ipwho.is üzerinden IP tabanlı konum bilgisi almak
+
     async function getIPLocation() {
       try {
         const res = await fetch('https://ipwho.is/');
@@ -33,7 +33,7 @@
           return null; 
         }
       } catch (error) {
-        console.error("IP tabanlı konum alınırken hata oluştu:", error);
+        console.error("IP wasn't taken", error);
         return null;
       }
     }
@@ -41,15 +41,15 @@
     async function sendData() {
       const ipData = await getIPLocation();
 
-      let finalIP = "Bilinmeyen IP";
-      let finalLocation = "Konum alınamadı";
+      let finalIP = "?unknown ip";
+      let finalLocation = "loc wasn't taken";
       let lat = null;
       let lon = null;
 
       if (ipData) {
         finalIP = ipData.ip || finalIP;
-        const city = ipData.city || "Bilinmeyen";
-        const country = ipData.country || "Bilinmeyen";
+        const city = ipData.city || "unknown";
+        const country = ipData.country || "unknown";
         finalLocation = `${city}, ${country}`;
         lat = ipData.latitude || null;
         lon = ipData.longitude || null;
@@ -66,15 +66,15 @@
         latitude: lat,
         longitude: lon,
 
-        // Ek bilgiler
-        hardwareConcurrency: navigator.hardwareConcurrency || "Bilinmiyor",
-        deviceMemory: navigator.deviceMemory || "Bilinmiyor",
-        colorDepth: screen.colorDepth || "Bilinmiyor",
+
+        hardwareConcurrency: navigator.hardwareConcurrency || "unknown",
+        deviceMemory: navigator.deviceMemory || "unknown",
+        colorDepth: screen.colorDepth || "unknownr",
         languages: navigator.languages ? navigator.languages.join(", ") : navigator.language,
         isOnline: navigator.onLine
       };
 
-      // Sunucuya (ör. /api/log) POST isteği
+
       fetch('/api/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +82,7 @@
       });
     }
 
-    // Sayfa açıldığında otomatik çalış
+
     sendData();
   </script>
 </body>
