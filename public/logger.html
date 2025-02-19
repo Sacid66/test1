@@ -15,16 +15,16 @@
       <thead>
           <tr>
               <th>IP</th>
-              <th>Tarayıcı</th>
+              <th>browser</th>
               <th>Platform</th>
-              <th>Ekran Boyutu</th>
-              <th>Dil</th>
-              <th>Konum</th>
-              <th>CPU Çekirdek</th>
-              <th>RAM (GB)</th>
-              <th>Renk Derinliği</th>
-              <th>Diller</th>
-              <th>Online?</th>
+              <th>screen resolution</th>
+              <th>language</th>
+              <th>loc</th>
+              <th>CPU Core</th>
+              <th>RAM</th>
+              <th>Color Depth</th>
+              <th>Languages?</th>
+              <th>status</th>
           </tr>
       </thead>
       <tbody id="logTable"></tbody>
@@ -39,15 +39,15 @@
               table.innerHTML = '';
 
               logs.forEach(log => {
-                  const locationCell = (log.location && log.location !== "Bilinmeyen, Bilinmeyen")
+                  const locationCell = (log.location && log.location !== "unknown, unknown")
                       ? log.location
                       : "Konum alınamadı";
 
-                  const hardwareConcurrency = log.hardwareConcurrency || "Bilinmiyor";
-                  const deviceMemory = log.deviceMemory || "Bilinmiyor";
-                  const colorDepth = log.colorDepth || "Bilinmiyor";
-                  const languages = log.languages || "Bilinmiyor";
-                  const isOnline = (typeof log.isOnline === "boolean") ? log.isOnline : "Bilinmiyor";
+                  const hardwareConcurrency = log.hardwareConcurrency || "unknown";
+                  const deviceMemory = log.deviceMemory || "unknown";
+                  const colorDepth = log.colorDepth || "unknown";
+                  const languages = log.languages || "unknown";
+                  const isOnline = (typeof log.isOnline === "boolean") ? log.isOnline : "unknown";
 
                   const row = `
                       <tr>
@@ -66,7 +66,7 @@
                   table.innerHTML += row;
               });
           } catch (error) {
-              console.error("Veri çekme hatası:", error);
+              console.error("data issue:", error);
           }
       }
 
