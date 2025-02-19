@@ -41,7 +41,7 @@
               logs.forEach(log => {
                   const locationCell = (log.location && log.location !== "unknown, unknown")
                       ? log.location
-                      : "Konum alınamadı";
+                      : "loc wasn't taken";
 
                   const hardwareConcurrency = log.hardwareConcurrency || "unknown";
                   const deviceMemory = log.deviceMemory || "unknown";
