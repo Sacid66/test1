@@ -11,19 +11,32 @@ let blockedIPs = new Set();
 
 // IP kontrolü için middleware
 app.use((req, res, next) => {
-    const clientIP = req.ip || req.connection.remoteAddress;
+    // IPv4 adresini al
+    let clientIP = req.ip || req.connection.remoteAddress;
+    // IPv6 prefix'ini kaldır
+    clientIP = clientIP.replace(/^::ffff:/, '');
     
+    console.log('Gelen IP:', clientIP); // Debug için
+
     if (clientIP === ALLOWED_IP) {
         next();
     } else if (blockedIPs.has(clientIP)) {
-        res.status(404).send('Not Found');
+        res.sendStatus(404); // Tarayıcının kendi 404 sayfasını göster
     } else {
         blockedIPs.add(clientIP);
         res.send(`
-            <script>
-                alert('Uzak dur');
-                window.location.href = '/blocked';
-            </script>
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <script>
+                        alert('Uzak dur');
+                        // Alert kapandıktan sonra blocked sayfasına yönlendir
+                        window.location.href = '/blocked';
+                    </script>
+                </head>
+                <body></body>
+            </html>
         `);
     }
 });
@@ -45,9 +58,9 @@ app.get('/api/getLogs', (req, res) => {
     res.json(logs);
 });
 
-// Blocked route
+// Blocked route - tarayıcının kendi 404 sayfasını göster
 app.get('/blocked', (req, res) => {
-    res.status(404).send('Not Found');
+    res.sendStatus(404);
 });
 
 // Varsayılan olarak index.html göster
