@@ -6,8 +6,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Sadece izin verilen IP
-const allowedIP = '46.221.94.247';
+// İzin verilen IP'ler dizisi
+const allowedIPs = ['46.221.94.247', '176.233.24.66'];
 // Bloke edilmiş IP'leri tutan obje
 const blockedIPs = {};
 
@@ -19,15 +19,15 @@ app.use((req, res, next) => {
     clientIP = clientIP.replace("::ffff:", "");
   }
 
-  // Eğer izin verilen IP ise, devam et
-  if (clientIP === allowedIP) {
+  // Eğer istemci IP'si izin verilenler arasında varsa, devam et
+  if (allowedIPs.includes(clientIP)) {
     return next();
   } else {
     // Eğer bu IP daha önce uyarıldıysa, 404 Not Found döndür
     if (blockedIPs[clientIP]) {
       return res.status(404).send('Not Found');
     } else {
-      // İlk erişimde uyarı mesajı göster, ip'yi bloke et
+      // İlk erişimde uyarı mesajı göster, IP'yi bloke et
       blockedIPs[clientIP] = true;
       return res.send(`
         <html>
