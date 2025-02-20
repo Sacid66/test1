@@ -6,39 +6,40 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const ALLOWED_IP = '46.221.94.247';
-let blockedIPs = new Set();
+// Sadece izin verilen IP
+const allowedIP = '46.221.94.247';
+// Bloke edilmiş IP'leri tutan obje
+const blockedIPs = {};
 
-// IP kontrolü için middleware
+// Tüm isteklere uygulanan IP kontrol middleware’i
 app.use((req, res, next) => {
-    // IPv4 adresini al
-    let clientIP = req.ip || req.connection.remoteAddress;
-    // IPv6 prefix'ini kaldır
-    clientIP = clientIP.replace(/^::ffff:/, '');
-    
-    console.log('Gelen IP:', clientIP); // Debug için
+  let clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+  // IPv6 formatındaki "::ffff:" önekini kaldır
+  if (clientIP.startsWith("::ffff:")) {
+    clientIP = clientIP.replace("::ffff:", "");
+  }
 
-    if (clientIP === ALLOWED_IP) {
-        next();
-    } else if (blockedIPs.has(clientIP)) {
-        res.sendStatus(404); // Tarayıcının kendi 404 sayfasını göster
+  // Eğer izin verilen IP ise, devam et
+  if (clientIP === allowedIP) {
+    return next();
+  } else {
+    // Eğer bu IP daha önce uyarıldıysa, 404 Not Found döndür
+    if (blockedIPs[clientIP]) {
+      return res.status(404).send('Not Found');
     } else {
-        blockedIPs.add(clientIP);
-        res.send(`
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <script>
-                        alert('Uzak dur');
-                        // Alert kapandıktan sonra blocked sayfasına yönlendir
-                        window.location.href = '/blocked';
-                    </script>
-                </head>
-                <body></body>
-            </html>
-        `);
+      // İlk erişimde uyarı mesajı göster, ip'yi bloke et
+      blockedIPs[clientIP] = true;
+      return res.send(`
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script>alert('uzak dur');</script>
+          </head>
+          <body></body>
+        </html>
+      `);
     }
+  }
 });
 
 // Public klasörünü statik olarak servise aç
@@ -56,11 +57,6 @@ app.post('/api/log', (req, res) => {
 // Kaydedilen verileri döndür
 app.get('/api/getLogs', (req, res) => {
     res.json(logs);
-});
-
-// Blocked route - tarayıcının kendi 404 sayfasını göster
-app.get('/blocked', (req, res) => {
-    res.sendStatus(404);
 });
 
 // Varsayılan olarak index.html göster
